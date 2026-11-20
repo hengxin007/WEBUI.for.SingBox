@@ -57,27 +57,96 @@ chmod +x data/sing-box/sing-box
 chmod +x data/sing-box/sing-box-latest
 ```
 
-如果使用容器部署，对应的容器内目录为 `/app/data/sing-box`；使用上述示例中的命名卷时，需要将 core 放入该卷对应的目录。替换已有 core 前请先停止正在运行的 core，放置完成后刷新 Web UI 或重启服务即可识别本地版本。
+如果使用下方的容器部署方式，宿主机目录为 `/opt/webui-for-singbox/data/sing-box`，对应容器内的 `/app/data/sing-box`。替换已有 core 前请先停止正在运行的 core，放置完成后刷新 Web UI 或重启服务即可识别本地版本。
 
-## 容器部署
+## 一、安装 WEBUI.for.SingBox
 
-从 Docker Hub 拉取并运行镜像。已有部署可将镜像地址换成下面的地址，并沿用现有的 `/app/data` 挂载。
+### 1. 创建项目目录
+
+```bash
+mkdir -p /opt/webui-for-singbox
+cd /opt/webui-for-singbox
+```
+
+### 2. 拉取 Docker 镜像
 
 ```bash
 docker pull hengxin007/webui-for-singbox:latest
+```
 
+### 3. 创建并启动容器
+
+```bash
 docker run -d \
   --name webui-for-singbox \
   --restart unless-stopped \
+  --network host \
   --cap-add NET_ADMIN \
   --device /dev/net/tun:/dev/net/tun \
-  --sysctl net.ipv4.ip_forward=1 \
-  --sysctl net.ipv6.conf.all.forwarding=1 \
-  -p 9090:9090 \
-  -v webui-for-singbox-data:/app/data \
+  -v /opt/webui-for-singbox/data:/app/data \
   -e GFS_HOST=0.0.0.0 \
   -e GFS_PORT=9090 \
   hengxin007/webui-for-singbox:latest
+```
+
+| 参数 | 作用 |
+| --- | --- |
+| `--restart unless-stopped` | 容器自动重启，手动停止后保持停止 |
+| `--network host` | 使用宿主机网络，WebUI 直接监听宿主机的 `9090` 端口 |
+| `--cap-add NET_ADMIN` | 允许管理网络接口和路由 |
+| `--device /dev/net/tun:/dev/net/tun` | 提供 TUN 设备 |
+| `-v /opt/webui-for-singbox/data:/app/data` | 将数据持久化到宿主机目录 |
+| `-e GFS_HOST=0.0.0.0` | 在所有 IPv4 接口上监听 WebUI |
+| `-e GFS_PORT=9090` | 设置 WebUI 监听端口 |
+
+如果部署场景需要 IPv4 转发，在宿主机上执行 `sudo sysctl -w net.ipv4.ip_forward=1`。
+
+### 4. 查看运行状态
+
+```bash
+docker ps -a
+```
+
+在浏览器中打开以下地址，将 `Kali的IP地址` 替换为宿主机的实际 IP 地址。
+
+```text
+http://Kali的IP地址:9090
+```
+
+## 二、安装 sing-box Core
+
+### 1. 创建 Core 目录
+
+```bash
+mkdir -p /opt/webui-for-singbox/data/sing-box
+```
+
+### 2. 下载 sing-box
+
+查看宿主机的 CPU 架构。
+
+```bash
+uname -m
+```
+
+如果输出 `x86_64`，请下载 Linux AMD64 glibc 版本。其他架构请选择对应的 Linux glibc 版本。[sing-box 官方发布页](https://github.com/SagerNet/sing-box/releases)
+
+下载并解压后，将其中的 `sing-box` 文件放到以下位置。
+
+```text
+/opt/webui-for-singbox/data/sing-box/sing-box
+```
+
+### 3. 添加执行权限
+
+```bash
+chmod +x /opt/webui-for-singbox/data/sing-box/sing-box
+```
+
+### 4. 检查文件
+
+```bash
+file /opt/webui-for-singbox/data/sing-box/sing-box
 ```
 
 ## 系统服务
