@@ -26,7 +26,7 @@
 构建二进制执行文件：
 
 ```bash
-git clone https://github.com/hvvvvvvv/WEBUI.for.SingBox.git
+git clone https://github.com/hengxin007/WEBUI.for.SingBox.git
 cd WEBUI.for.SingBox
 
 make build
@@ -107,10 +107,10 @@ docker run -d \
 docker ps -a
 ```
 
-在浏览器中打开以下地址，将 `Kali的IP地址` 替换为宿主机的实际 IP 地址。
+在浏览器中打开以下地址，将 `IP地址` 替换为宿主机的实际 IP 地址。
 
 ```text
-http://Kali的IP地址:9090
+http://IP地址:9090
 ```
 
 ## 二、安装 sing-box Core
