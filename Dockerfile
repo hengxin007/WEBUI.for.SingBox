@@ -27,7 +27,8 @@ RUN export CGO_ENABLED=0 GOOS="$TARGETOS" GOARCH="$TARGETARCH"; \
 
 # Runtime image for the selected target platform.
 FROM alpine:3.21
-RUN apk add --no-cache ca-certificates tzdata
+# Existing sing-box downloads may use the glibc loader.
+RUN apk add --no-cache ca-certificates gcompat tzdata
 WORKDIR /app
 COPY --from=backend-builder /out/webui.for.singbox.server ./
 
