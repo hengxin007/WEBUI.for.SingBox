@@ -25,10 +25,11 @@ RUN export CGO_ENABLED=0 GOOS="$TARGETOS" GOARCH="$TARGETARCH"; \
   if [ "$TARGETARCH" = "arm" ]; then export GOARM="${TARGETVARIANT#v}"; fi; \
   make backend OUTPUT_DIR=/out
 
-# Runtime image for the selected target platform.
-FROM alpine:3.21
-# Existing sing-box downloads may use the glibc loader.
-RUN apk add --no-cache ca-certificates gcompat tzdata
+# The runtime needs glibc to run the official glibc builds of sing-box.
+FROM debian:trixie-slim
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates tzdata \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=backend-builder /out/webui.for.singbox.server ./
 

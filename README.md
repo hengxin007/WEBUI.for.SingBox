@@ -61,10 +61,10 @@ chmod +x data/sing-box/sing-box-latest
 
 ## 容器部署
 
-拉取并运行最新稳定版本：
+从 Docker Hub 拉取并运行镜像。已有部署可将镜像地址换成下面的地址，并沿用现有的 `/app/data` 挂载。
 
 ```bash
-docker pull ghcr.io/hvvvvvvv/webui.for.singbox:latest
+docker pull hengxin007/webui-for-singbox:latest
 
 docker run -d \
   --name webui-for-singbox \
@@ -77,7 +77,7 @@ docker run -d \
   -v webui-for-singbox-data:/app/data \
   -e GFS_HOST=0.0.0.0 \
   -e GFS_PORT=9090 \
-  ghcr.io/hvvvvvvv/webui.for.singbox:latest
+  hengxin007/webui-for-singbox:latest
 ```
 
 ## 系统服务

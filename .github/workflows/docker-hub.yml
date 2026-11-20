@@ -35,18 +35,32 @@ jobs:
           cache-from: type=gha,scope=docker-hub
           cache-to: type=gha,mode=max,scope=docker-hub
 
-      - name: Run the glibc sing-box release in Alpine
+      - name: Run the official glibc and musl sing-box releases
         run: |
           version=1.14.2
-          asset="sing-box-$version-linux-amd64-glibc"
-          curl -fsSL --retry 3 \
-            "https://github.com/SagerNet/sing-box/releases/download/v$version/$asset.tar.gz" \
-            -o "$RUNNER_TEMP/$asset.tar.gz"
-          tar -xzf "$RUNNER_TEMP/$asset.tar.gz" -C "$RUNNER_TEMP" "$asset/sing-box"
-          docker run --rm \
-            --mount "type=bind,source=$RUNNER_TEMP/$asset/sing-box,target=/tmp/sing-box,readonly" \
-            --entrypoint /bin/sh webui-for-singbox:smoke \
-            -ec 'apk info -e gcompat; /tmp/sing-box version'
+          for libc in glibc musl; do
+            asset="sing-box-$version-linux-amd64-$libc"
+            curl -fsSL --retry 3 \
+              "https://github.com/SagerNet/sing-box/releases/download/v$version/$asset.tar.gz" \
+              -o "$RUNNER_TEMP/$asset.tar.gz"
+            tar -xzf "$RUNNER_TEMP/$asset.tar.gz" -C "$RUNNER_TEMP" "$asset/sing-box"
+            docker run --rm \
+              --mount "type=bind,source=$RUNNER_TEMP/$asset/sing-box,target=/tmp/sing-box,readonly" \
+              --entrypoint /tmp/sing-box webui-for-singbox:smoke version
+          done
+
+      - name: Check that the WebUI starts
+        run: |
+          container="$(docker run --detach --publish 127.0.0.1:9090:9090 webui-for-singbox:smoke)"
+          trap 'docker rm --force --volumes "$container" >/dev/null' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:9090/api/app/start-time >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs "$container"
+          exit 1
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
